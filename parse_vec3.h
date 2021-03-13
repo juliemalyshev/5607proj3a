@@ -24,12 +24,44 @@ vec3 up = vec3(0,1,0).normalized();
 vec3 right = vec3(-1,0,0).normalized();
 float halfAngleVFOV = 35;
 
+
 //Scene (Sphere) Parmaters
+vec3 spheres[20];
+float radii[20];
+float materials[20][20];
 vec3 spherePos = vec3(0,0,2);
 float sphereRadius = 1;
+int i = 0;
+int f = 0;
+int y = 0;
+int g = 0;
 
 //Color
-float  red,green,blue;
+float red,blue,green;
+float ambientr;
+float ambientg;
+float ambientb;
+float diffuser, diffuseg, diffuseb;
+float specr,specg,specb;
+float transr,transg,transb;
+float highlight;
+float ioR;
+
+//ambient light array
+float amlight[20][20];
+float plight[20][20];
+//Point light
+Color intensityP;
+vec3 lightPosP;
+
+float rs;
+float bs;
+float gs;
+
+//Ambient Light
+float ra;
+float ba;
+float ga;
 
 void parseSceneFile(std::string fileName){
   //TODO: Override the default values with new data from the file "fileName"
@@ -69,13 +101,17 @@ void parseSceneFile(std::string fileName){
     }
 
     if (commandStr == "sphere:"){ //If the command is a sphere command
-       int x,y,z;
+       float x,y,z;
        float r;
-       sscanf(line,"sphere: %i %i %i %f", &x, &y, &z, &r);
+       sscanf(line,"sphere: %f %f %f %f", &x, &y, &z, &r);
        //printf(line);
-       printf("Sphere as position (%i,%i,%i) with radius %f\n",x,y,z,r);
+       //printf("Sphere as position (%i,%i,%i) with radius %f\n",x,y,z,r);
        sphereRadius = r;
        spherePos = vec3(x,y,z);
+       spheres[i] = spherePos;
+       radii[i] = sphereRadius;
+       printf("Sphere as position %f %f %f with radius %f\n",spheres[i].x,spheres[i].y,spheres[i].z,radii[i]);
+       i++;
 
 
     }
@@ -85,7 +121,7 @@ void parseSceneFile(std::string fileName){
        red = r;
        green = g;
        blue = b;
-       printf("Background color of (%f,%f,%f)\n",red,green,blue);
+       printf("Background color of (%f,%f,%f)\n",r,g,b);
     }
     else if (commandStr == "output_image:"){ //If the command is an output_image command
        char outFile[1024];
@@ -131,6 +167,75 @@ void parseSceneFile(std::string fileName){
        img_width = x;
        img_height = y;
        //printf("Render to file named: %s\n", outFile);
+    }
+    else if (commandStr == "material:"){ //If the command is an output_image command
+       float ar,ag,ab,dr,dg,db,sr,sg,sb,ns,tr,tg,tb,ior;
+       sscanf(line,"material: %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &ar, &ag, &ab, &dr, &dg, &db, &sr, &sg, &sb, &ns, &tr, &tg, &tb, &ior);
+       ambientr = ar;
+       ambientg = ag;
+       ambientb = ab;
+       diffuser = dr;
+       diffuseg = dg;
+       diffuseb = db;
+       specr = sr;
+       specg = sg;
+       specb = sb;
+       highlight = ns;
+       transr = tr;
+       transg = tg;
+       transb = tb;
+       ioR = ior;
+
+       materials[f][0] = ambientr;
+       materials[f][1] = ambientg;
+       materials[f][2] = ambientb;
+       materials[f][3] = diffuser;
+       materials[f][4] = diffuseg;
+       materials[f][5] = diffuseb;
+       materials[f][6] = specr;
+       materials[f][7] = specg;
+       materials[f][8] = specb;
+       materials[f][9] = highlight;
+       materials[f][10] = transr;
+       materials[f][11] = transg;
+       materials[f][12] = transb;
+       materials[f][13] = ioR;
+       f++;
+       printf("HELLO: %f \n", materials[0][2]);
+       //printf("material: %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", ambientr,ambientg,ambientb,diffuser,diffuseb,diffuseg,specr,specg,specb,highlight,transr, transg, transb,ioR);
+    }
+    else if (commandStr == "point_light:"){ //If the command is an output_image command
+       int r,g,b,x,y,z;
+
+       sscanf(line,"point_light: %d %d %d %d %d %d", &r, &g, &b, &x, &y, &z);
+
+
+         rs = r;
+         gs = g;
+         bs = b;
+
+       lightPosP = vec3(x,y,z);
+       //printf("Render to file named: %s\n", outFile);
+    }
+    else if (commandStr == "spot_light:"){ //If the command is an output_image command
+       int r,g,b,px,py,pz,dx,dy,dz,a1,a2;
+       sscanf(line,"spot_light: %d %d %d %d %d %d %d %d %d %d %d", &r, &g, &b, &px, &py, &pz, &dx, &dy, &dz, &a1, &a2);
+       Color intensity = Color(r,g,b);
+       vec3 lightPos = vec3(px,py,pz);
+       vec3 lightDir = vec3(dx,dy,dz);
+
+       //printf("Render to file named: %s\n", outFile);
+    }
+    else if (commandStr == "ambient_light:"){ //If the command is an output_image command
+       float r,g,b;
+
+       sscanf(line,"ambient_light: %f %f %f", &r, &g, &b);
+
+       ra = r;
+       ga = g;
+       ba = b;
+
+       printf("RA: %f\n", ra);
     }
     else {
       printf("WARNING. Unknown command: '%s'\n",command);
